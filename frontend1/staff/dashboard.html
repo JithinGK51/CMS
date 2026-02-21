@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Dashboard - CMS</title>
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body class="dash-page">
+  <header class="dash-header">
+    <div class="logo-area"><div class="logo-icon">👷</div><span class="logo-text">Staff Dashboard</span></div>
+    <div class="header-links"><span class="user-name">-</span></div>
+  </header>
+
+  <div class="dash-body">
+    <aside class="sidebar">
+      <div class="sidebar-user"><div class="user-pill"><div class="user-avatar" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3)"></div><div class="user-info"><div class="user-name">-</div><div class="user-role">Staff</div></div></div></div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-link active">🏠 Dashboard</a>
+        <a href="my-complaints.html" class="nav-link">📋 My Complaints</a>
+        <a href="profile.html" class="nav-link">👤 Profile</a>
+        <a href="settings.html" class="nav-link">⚙ Settings</a>
+        <a href="#" class="nav-link logout">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="breadcrumb">Staff Dashboard</div>
+      <h1 class="page-title">Staff Dashboard</h1>
+
+      <div class="stats-grid">
+        <div class="stat-card blue"><div><div class="num" id="assigned">0</div><div class="label">Assigned</div></div></div>
+        <div class="stat-card orange"><div><div class="num" id="inProgress">0</div><div class="label">In Progress</div></div></div>
+        <div class="stat-card green"><div><div class="num" id="resolved">0</div><div class="label">Completed</div></div></div>
+      </div>
+
+      <div class="content-card">
+        <h3>My Complaints</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Token</th><th>Category</th><th>Location</th><th>Date</th><th>Status</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer"><span>SafeCity</span><span>CivicWorks</span><span>QuickFix</span><span>GovSolve</span></footer>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/auth-guard.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    renderLayout({ role: 'staff', page: 'dashboard' });
+
+    const load = async () => {
+      const r = await api.get('/staff/complaints');
+      const list = r.success && r.data ? r.data : [];
+      const sc = s => ({ assigned: 0, in_progress: 0, resolved: 0, ...list.reduce((a, c) => { a[c.status] = (a[c.status]||0)+1; return a; }, {}) });
+      const counts = sc();
+      document.getElementById('assigned').textContent = list.length;
+      document.getElementById('inProgress').textContent = counts.in_progress || counts.assigned || 0;
+      document.getElementById('resolved').textContent = counts.resolved || 0;
+
+      const statusCls = s => 'badge badge-' + (s || 'pending').replace('_','-');
+      document.getElementById('tableBody').innerHTML = list.slice(0, 10).map(c => `
+        <tr><td><a href="complaint-detail.html?id=${c.id}">${c.token || c.id}</a></td>
+        <td>${(c.categories && c.categories.name) || '-'}</td><td>${c.location || '-'}</td>
+        <td>${c.created_at ? new Date(c.created_at).toLocaleString() : '-'}</td>
+        <td><span class="${statusCls(c.status)}">${c.status || '-'}</span></td></tr>
+      `).join('') || '<tr><td colspan="5">No complaints</td></tr>';
+    };
+    load();
+  </script>
+</body>
+</html>

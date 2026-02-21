@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Your Complaint - CMS</title>
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/public.css">
+</head>
+
+<body class="public-page">
+  <header class="public-header">
+    <div class="logo-area">
+      <div class="logo-icon">🏛</div>
+      <span class="logo-text">Public Complaint Management System</span>
+    </div>
+    <div class="header-actions">
+      <a href="index.html" class="btn btn-outline">Back to Home</a>
+    </div>
+  </header>
+
+  <main class="form-container">
+    <div class="form-card">
+      <h1>Submit Your Complaint</h1>
+
+      <form id="complaintForm">
+        <div class="form-group">
+          <label>Complaint Category</label>
+          <select name="category_id" class="input" required id="categorySelect">
+            <option value="">Select category...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Complaint Title</label>
+          <input type="text" name="title" class="input" placeholder="Enter complaint title" required>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea name="description" class="input" rows="4"
+            placeholder="Describe the issue you are facing..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" name="location" class="input" placeholder="Enter location">
+        </div>
+
+        <div class="form-group">
+          <label>Upload Image <span class="hint">(optional)</span></label>
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+            <input type="file" id="imageInput" name="image" accept="image/*" style="display:none">
+            <span>📷 Attach a photo (optional) — JPG, PNG or GIF</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <span class="hint">(for SMS update)</span>
+          <div class="phone-input">
+            <select class="input" style="width:80px">
+              <option>+91</option>
+            </select>
+            <input type="tel" name="citizen_mobile" class="input" placeholder="Enter mobile number">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Email (optional)</label>
+          <input type="email" name="citizen_email" class="input" placeholder="Enter your email">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;padding:14px">SUBMIT COMPLAINT</button>
+      </form>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span> SafeCity </span><span> CivicWorks </span><span> QuickFix </span><span> GovSolve </span>
+  </footer>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const prefCat = params.get('category_id');
+
+    (async () => {
+      const res = await api.get('/categories');
+      const sel = document.getElementById('categorySelect');
+      const cats = res.success && res.data ? res.data : [];
+      cats.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c.id;
+        o.textContent = c.name;
+        if (c.id === prefCat) o.selected = true;
+        sel.appendChild(o);
+      });
+    })();
+
+    document.getElementById('complaintForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const fd = new FormData();
+      fd.append('category_id', form.category_id.value);
+      fd.append('title', form.title.value);
+      fd.append('description', form.description.value);
+      fd.append('location', form.location.value);
+      fd.append('citizen_mobile', form.citizen_mobile.value);
+      fd.append('citizen_email', form.citizen_email.value);
+      const img = document.getElementById('imageInput').files[0];
+      if (img) fd.append('image', img);
+
+      const btn = form.querySelector('button[type=submit]');
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+
+      const data = await api.post('/complaints', fd, true);
+
+      if (data.success && data.data) {
+        const d = data.data;
+        const q = new URLSearchParams({
+          id: d.id || '',
+          token: d.token || '',
+          category: (d.categories && d.categories.name) || '',
+          date: d.created_at ? new Date(d.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : ''
+        });
+        location.href = 'success.html?' + q.toString();
+      } else {
+        alert(data.message || 'Failed to submit');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'SUBMIT COMPLAINT';
+    };
+
+    document.getElementById('uploadZone').ondragover = e => { e.preventDefault(); e.currentTarget.classList.add('dragover'); };
+    document.getElementById('uploadZone').ondragleave = e => { e.currentTarget.classList.remove('dragover'); };
+    document.getElementById('uploadZone').ondrop = e => {
+      e.preventDefault();
+      e.currentTarget.classList.remove('dragover');
+      const f = e.dataTransfer.files[0];
+      if (f && f.type.startsWith('image/')) document.getElementById('imageInput').files = e.dataTransfer.files;
+    };
+  </script>
+</body>
+
+</html>

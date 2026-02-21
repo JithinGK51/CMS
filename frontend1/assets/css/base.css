@@ -1,0 +1,56 @@
+/* Base styles - shared across all pages */
+:root {
+  --primary: #1e3a8a;
+  --primary-light: #2563eb;
+  --primary-dark: #1e40af;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --bg-light: #f8fafc;
+  --white: #ffffff;
+  --border: #e2e8f0;
+  --footer-bg: #1e3a8a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { overflow-x: hidden; }
+html, body { min-height: 100vh; max-width: 100vw; overflow-x: hidden; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); background: var(--bg-light); }
+
+/* Common components */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;
+  border: none; text-decoration: none; transition: opacity 0.2s;
+}
+.btn:hover { opacity: 0.9; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-success { background: var(--success); color: white; }
+.btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text); }
+
+.input {
+  width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+  border-radius: 8px; font-size: 1rem;
+}
+.input:focus { outline: none; border-color: var(--primary); }
+
+.card { background: var(--white); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); padding: 24px; }
+
+/* Footer - partner logos */
+.footer { background: var(--footer-bg); color: white; padding: 16px 24px; display: flex; justify-content: center; align-items: center; gap: 32px; flex-wrap: wrap; }
+.footer span { font-size: 0.9rem; font-weight: 600; }
+
+/* Breadcrumb */
+.breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
+.breadcrumb a { color: var(--primary-light); text-decoration: none; }
+
+/* Status badges */
+.badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+.badge-pending { background: #fef3c7; color: #b45309; }
+.badge-in-progress { background: #dbeafe; color: #1d4ed8; }
+.badge-resolved { background: #d1fae5; color: #047857; }
+.badge-assigned { background: #e0e7ff; color: #3730a3; }
+.badge-unassigned { background: #fee2e2; color: #b91c1c; }
+.badge-closed { background: #f1f5f9; color: #475569; }

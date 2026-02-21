@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - CMS</title>
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+
+<body class="dash-page">
+  <header class="dash-header">
+    <div class="logo-area">
+      <div class="logo-icon">🛡</div>
+      <span class="logo-text">Admin Dashboard</span>
+    </div>
+    <div class="header-links">
+      <a href="categories.html">Manage Categories</a>
+      <a href="departments.html">Departments</a>
+      <a href="settings.html">Settings</a>
+      <a href="#" class="notif-badge">🔔<sup id="notifCount">0</sup></a>
+      <span class="user-pill" style="padding:4px 10px"><span class="user-name">-</span></span>
+    </div>
+  </header>
+
+  <div class="dash-body">
+    <aside class="sidebar">
+      <div class="sidebar-user">
+        <div class="user-pill">
+          <div class="user-avatar" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3)">
+          </div>
+          <div class="user-info">
+            <div class="user-name">-</div>
+            <div class="user-role">Admin</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-link active">🏠 Dashboard</a>
+        <a href="manage-complaints.html" class="nav-link">📋 All Complaints</a>
+        <a href="unassigned-complaints.html" class="nav-link">📌 Unassigned Complaints</a>
+        <a href="staff.html" class="nav-link">👥 Staff Management</a>
+        <a href="reports.html" class="nav-link">📊 Reports</a>
+        <a href="settings.html" class="nav-link">⚙ Settings</a>
+        <a href="#" class="nav-link logout">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="breadcrumb"><a href="dashboard.html">Admin Dashboard</a></div>
+      <h1 class="page-title">Admin Dashboard</h1>
+
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card blue">
+          <div>
+            <div class="num" id="total">0</div>
+            <div class="label">Total</div>
+          </div><span>📄</span>
+        </div>
+        <div class="stat-card orange">
+          <div>
+            <div class="num" id="pending">0</div>
+            <div class="label">Pending</div>
+          </div><span>📦</span>
+        </div>
+        <div class="stat-card purple">
+          <div>
+            <div class="num" id="inProgress">0</div>
+            <div class="label">In Progress</div>
+          </div><span>🚶</span>
+        </div>
+        <div class="stat-card green">
+          <div>
+            <div class="num" id="resolved">0</div>
+            <div class="label">Resolved</div>
+          </div><span>✓</span>
+        </div>
+      </div>
+
+      <div class="content-card">
+        <h3>Complaints By Category</h3>
+        <div class="chart-placeholder" id="categoryChart">Loading...</div>
+        <button class="btn btn-primary" style="margin-top:16px">Download Report</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div class="content-card">
+          <h3>Complaints By Category</h3>
+          <div class="chart-placeholder" id="catChart2">Pie chart</div>
+        </div>
+        <div class="content-card">
+          <h3>Complaints By Department</h3>
+          <div class="chart-placeholder" id="deptChart">Bar chart</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer"><span>SafeCity</span><span>CivicWorks</span><span>QuickFix</span><span>GovSolve</span></footer>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/auth-guard.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    renderLayout({ role: 'admin', page: 'dashboard' });
+
+    (async () => {
+      try {
+        const [sum, cat, dept] = await Promise.all([
+          api.get('/admin/reports/summary'),
+          api.get('/admin/reports/categories'),
+          api.get('/admin/reports/departments')
+        ]);
+
+        if (sum.success && sum.data) {
+          if (document.getElementById('total')) document.getElementById('total').textContent = sum.data.total;
+          if (document.getElementById('pending')) document.getElementById('pending').textContent = sum.data.pending;
+          if (document.getElementById('resolved')) document.getElementById('resolved').textContent = sum.data.resolved;
+          if (document.getElementById('inProgress')) document.getElementById('inProgress').textContent = (sum.data.total - sum.data.pending - sum.data.resolved) || 0;
+        }
+
+        if (cat.success && cat.data) {
+          const catHtml = cat.data.slice(0, 5).map(c =>
+            `<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>${c.category}</span><strong>${c.count}</strong></div>`
+          ).join('');
+          if (document.getElementById('catChart2')) document.getElementById('catChart2').innerHTML = catHtml;
+        }
+
+        if (dept.success && dept.data) {
+          const deptHtml = dept.data.slice(0, 5).map(d =>
+            `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12px"><span>${d.department}</span><span>${d.rate}% Resolved</span></div><div style="height:8px;background:#e2e8f0;border-radius:4px;margin-top:4px"><div style="height:100%;width:${d.rate}%;background:var(--primary);border-radius:4px"></div></div></div>`
+          ).join('');
+          if (document.getElementById('deptChart')) document.getElementById('deptChart').innerHTML = deptHtml;
+        }
+      } catch (e) { console.warn('Dashboard load failed:', e); }
+    })();
+  </script>
+</body>
+
+</html>

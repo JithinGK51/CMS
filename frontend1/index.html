@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Public Complaint Management System</title>
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/public.css">
+</head>
+
+<body class="public-page">
+  <header class="public-header">
+    <div class="logo-area">
+      <div class="logo-icon">🏛</div>
+      <span class="logo-text">Public Complaint Management System</span>
+    </div>
+    <div class="header-actions">
+      <div class="dropdown">
+        <button class="btn btn-outline">For Authorities ▾</button>
+        <div class="dropdown-menu">
+          <a href="login.html">Admin Login</a>
+          <a href="login.html">Staff Login</a>
+        </div>
+      </div>
+      <a href="login.html" class="btn btn-primary">Login</a>
+    </div>
+  </header>
+
+  <main class="hero">
+    <div class="hero-buttons">
+      <a href="select-category.html" class="btn btn-success">📢 Register Complaint</a>
+      <a href="track-complaint.html" class="btn btn-primary">🔍 Track Complaint ›</a>
+    </div>
+
+    <h2 class="section-title">Report Your Issue</h2>
+    <div class="category-grid" id="categoryGrid">
+      <a href="select-category.html?cat=civic" class="category-card"><span class="category-icon">🗑</span>Garbage
+        Problem</a>
+      <a href="select-category.html?cat=water" class="category-card"><span class="category-icon">💧</span>Water
+        Supply</a>
+      <a href="select-category.html?cat=electricity" class="category-card"><span
+          class="category-icon">⚡</span>Electricity</a>
+      <a href="select-category.html?cat=road" class="category-card"><span class="category-icon">🛣</span>Road Issues</a>
+      <a href="select-category.html?cat=traffic" class="category-card"><span class="category-icon">🚦</span>Traffic
+        Problems</a>
+      <a href="select-category.html?cat=health" class="category-card"><span class="category-icon">🏥</span>Health &
+        Sanitation</a>
+      <a href="select-category.html?cat=education" class="category-card"><span
+          class="category-icon">🏫</span>Education</a>
+      <a href="select-category.html?cat=safety" class="category-card"><span class="category-icon">🛡</span>Public
+        Safety</a>
+    </div>
+
+    <h2 class="section-title">How It Works</h2>
+    <div class="how-it-works">
+      <div class="step-card">① Select Complaint Type<br><small>• Choose the category of your issue.</small></div>
+      <div class="step-card">② Submit Details<br><small>• Fill the form & submit your complaint.</small></div>
+      <div class="step-card">③ Get Updates<br><small>• Track status & receive updates.</small></div>
+    </div>
+
+    <section class="help-section">
+      <h2 class="section-title">Need Help?</h2>
+      <div class="help-item">📞 Call: 1800-123-4567</div>
+      <div class="help-item">✉ Email: support@example.com</div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span> SafeCity </span><span> CivicWorks </span><span> QuickFix </span><span> GovSolve </span>
+  </footer>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    (async function () {
+      const res = await api.get('/categories');
+      if (res.success && res.data && res.data.length) {
+        const grid = document.getElementById('categoryGrid');
+        grid.innerHTML = res.data.map(c => `
+          <a href="select-category.html?category_id=${c.id}" class="category-card">
+            <span class="category-icon">${c.name.includes('Water') ? '💧' : c.name.includes('Elec') ? '⚡' : '📋'}</span>
+            ${c.name}
+          </a>
+        `).join('');
+      }
+    })();
+  </script>
+</body>
+
+</html>

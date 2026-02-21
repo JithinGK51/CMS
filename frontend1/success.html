@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complaint Submitted - CMS</title>
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/public.css">
+</head>
+<body class="public-page">
+  <header class="public-header">
+    <div class="logo-area">
+      <div class="logo-icon">🏛</div>
+      <span class="logo-text">Public Complaint Management System</span>
+    </div>
+  </header>
+
+  <main class="hero">
+    <div class="success-card form-card">
+      <div class="breadcrumb"><a href="index.html">Home</a> › Complaint Submitted</div>
+      <div class="success-icon">✓</div>
+      <h2>Complaint Submitted Successfully!</h2>
+      <p>✓ Your complaint has been successfully submitted.</p>
+
+      <div class="detail-row">📄 Complaint ID: <strong id="complaintId">-</strong></div>
+      <div class="detail-row">📂 Category: <strong id="categoryName">-</strong></div>
+      <div class="detail-row">📅 Submitted On: <strong id="submittedOn">-</strong></div>
+
+      <p class="hint" style="margin-top:16px">Use the Complaint ID to track the status of your complaint.</p>
+
+      <div class="success-actions">
+        <a href="#" id="trackLink" class="btn btn-primary">🔍 Track Complaint</a>
+        <a href="index.html" class="btn btn-outline">🏠 Back to Home</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span> SafeCity </span><span> CivicWorks </span><span> QuickFix </span><span> GovSolve </span>
+  </footer>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    const token = params.get('token');
+
+    document.getElementById('complaintId').textContent = token || 'CMP-' + id || '-';
+    document.getElementById('categoryName').textContent = params.get('category') || 'N/A';
+    const d = params.get('date') || new Date().toLocaleDateString('en-IN', { year:'numeric', month:'long', day:'numeric' });
+    document.getElementById('submittedOn').textContent = d;
+    document.getElementById('trackLink').href = 'track-complaint.html?q=' + encodeURIComponent(token || id || '');
+  </script>
+</body>
+</html>

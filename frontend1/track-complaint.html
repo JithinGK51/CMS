@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Your Complaint - CMS</title>
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/public.css">
+</head>
+
+<body class="public-page">
+  <header class="public-header">
+    <div class="logo-area">
+      <div class="logo-icon">🏛</div>
+      <span class="logo-text">Public Complaint Management System</span>
+    </div>
+    <div class="header-actions">
+      <a href="index.html" class="btn btn-outline">Back to Home</a>
+    </div>
+  </header>
+
+  <main class="track-card">
+    <div class="form-card">
+      <div class="breadcrumb"><a href="index.html">Home</a> › Track Complaint</div>
+      <h1 class="section-title">Track Your Complaint</h1>
+
+      <div class="search-row">
+        <input type="text" id="searchInput" class="input" placeholder="Enter Complaint ID">
+        <button type="button" class="btn btn-primary" id="searchBtn">🔍 Track Complaint</button>
+      </div>
+
+      <div id="result" style="display:none">
+        <div class="detail-row">📄 Complaint ID: <strong id="cid"></strong></div>
+        <div class="detail-row">📂 Type: <strong id="ctype"></strong></div>
+        <div class="detail-row">📊 Status: <strong id="cstatus"></strong></div>
+        <div class="detail-row">🏢 Department: <strong id="cdept"></strong></div>
+        <div class="detail-row">📅 Submitted On: <strong id="cdate"></strong></div>
+
+        <div
+          style="margin-top:20px; padding:15px; background:#f8fafc; border-radius:8px; border-left:4px solid var(--primary)">
+          <div style="font-weight:600; margin-bottom:4px">Subject</div>
+          <div id="ctitle" style="font-size:1.1rem; margin-bottom:12px"></div>
+
+          <div style="font-weight:600; margin-bottom:4px">Description</div>
+          <div id="cdesc" style="color:var(--text-muted); margin-bottom:12px"></div>
+
+          <div style="font-weight:600; margin-bottom:4px">Location</div>
+          <div id="cloc" style="color:var(--text-muted)"></div>
+        </div>
+
+        <div id="imageContainer" style="margin-top:20px; display:none">
+          <div style="font-weight:600; margin-bottom:8px">Attached Image</div>
+          <img id="cimg" src="" alt="Complaint"
+            style="max-width:100%; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+        </div>
+
+        <h3 style="margin:24px 0 12px">Progress Timeline</h3>
+        <div class="timeline" id="timeline"></div>
+      </div>
+
+      <div id="error" style="display:none;color:var(--danger);margin-top:16px"></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span> SafeCity </span><span> CivicWorks </span><span> QuickFix </span><span> GovSolve </span>
+  </footer>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const q = params.get('q');
+    if (q) document.getElementById('searchInput').value = q;
+
+    const search = async () => {
+      const val = document.getElementById('searchInput').value.trim();
+      if (!val) return;
+
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('error').style.display = 'none';
+
+      const data = await api.get('/complaints/track/' + encodeURIComponent(val));
+
+      if (!data.success) {
+        document.getElementById('error').textContent = data.message || 'Complaint not found';
+        document.getElementById('error').style.display = 'block';
+        return;
+      }
+
+      const c = data.data;
+      document.getElementById('cid').textContent = c.token || c.id;
+      document.getElementById('ctype').textContent = c.category_name || (c.categories && c.categories.name) || 'N/A';
+      document.getElementById('cdept').textContent = c.department_name || (c.departments && c.departments.name) || 'Unassigned';
+
+      const statusMap = { submitted: 'Submitted', assigned: 'Assigned', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed', pending: 'Pending' };
+      document.getElementById('cstatus').textContent = statusMap[c.status] || c.status;
+      document.getElementById('cstatus').className = 'badge badge-' + (c.status || 'pending').replace('_', '-');
+
+      const d = c.created_at ? new Date(c.created_at).toLocaleString() : '-';
+      document.getElementById('cdate').textContent = d;
+
+      document.getElementById('ctitle').textContent = c.title || 'N/A';
+      document.getElementById('cdesc').textContent = c.description || 'No description provided';
+      document.getElementById('cloc').textContent = c.location || 'N/A';
+
+      if (c.image_url) {
+        document.getElementById('cimg').src = c.image_url;
+        document.getElementById('imageContainer').style.display = 'block';
+      } else {
+        document.getElementById('imageContainer').style.display = 'none';
+      }
+      const statusOrder = ['submitted', 'assigned', 'in_progress', 'resolved', 'closed'];
+      const currentIdx = statusOrder.indexOf(c.status);
+
+      const tl = c.timeline || [];
+      document.getElementById('timeline').innerHTML = tl.map((t, i) => {
+        const isCurrent = t.status === c.status;
+        const isDone = statusOrder.indexOf(t.status) <= currentIdx;
+        const cls = isCurrent ? 'current' : (isDone ? '' : 'pending');
+        const dt = t.created_at ? new Date(t.created_at).toLocaleString() : '';
+        return `
+          <div class="timeline-item">
+            <div>
+              <span class="timeline-dot ${cls}">${isDone ? '✓' : (isCurrent ? '?' : '')}</span>
+              <strong>${statusMap[t.status] || t.status}</strong>: ${t.note || ''}
+            </div>
+            <span style="color:var(--text-muted)">${dt}</span>
+          </div>
+        `;
+      }).join('') || '<p style="color:var(--text-muted)">No timeline entries yet.</p>';
+
+      document.getElementById('result').style.display = 'block';
+    };
+
+    document.getElementById('searchBtn').onclick = search;
+    document.getElementById('searchInput').onkeypress = e => { if (e.key === 'Enter') search(); };
+    if (q) search();
+  </script>
+</body>
+
+</html>

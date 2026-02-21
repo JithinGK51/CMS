@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Settings - Admin</title>
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+
+<body class="dash-page">
+  <header class="dash-header">
+    <div class="logo-area">
+      <div class="logo-icon">🛡</div><span class="logo-text">Admin Dashboard</span>
+    </div>
+    <div class="header-links">
+      <a href="categories.html">Manage Categories</a>
+      <a href="departments.html">Departments</a>
+      <a href="settings.html">Settings</a>
+      <span class="user-name">-</span>
+    </div>
+  </header>
+
+  <div class="dash-body">
+    <aside class="sidebar">
+      <div class="sidebar-user">
+        <div class="user-pill">
+          <div class="user-avatar" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3)">
+          </div>
+          <div class="user-info">
+            <div class="user-name">-</div>
+            <div class="user-role">Admin</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
+        <a href="manage-complaints.html" class="nav-link">📋 All Complaints</a>
+        <a href="unassigned-complaints.html" class="nav-link">📌 Unassigned</a>
+        <a href="staff.html" class="nav-link">👥 Staff</a>
+        <a href="reports.html" class="nav-link">📊 Reports</a>
+        <a href="settings.html" class="nav-link active">⚙ Settings</a>
+        <a href="#" class="nav-link logout">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="breadcrumb">Admin Dashboard › System Settings</div>
+      <h1 class="page-title">System Settings</h1>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div class="content-card">
+          <h3>Auto Assign</h3>
+          <p style="color:var(--text-muted);margin:8px 0">Automatically assign complaints to staff based on category.
+          </p>
+          <label class="switch-row">
+            <input type="checkbox" id="autoAssign"> <span>Enable Auto-Assignment</span>
+          </label>
+        </div>
+        <div class="content-card">
+          <h3>Notifications</h3>
+          <p style="color:var(--text-muted);margin:8px 0">Global notification toggles for citizens.</p>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <label class="switch-row"><input type="checkbox" id="emailEnabled"> <span>Email Notifications</span></label>
+            <label class="switch-row"><input type="checkbox" id="smsEnabled"> <span>SMS Notifications</span></label>
+          </div>
+        </div>
+        <div class="content-card">
+          <h3>Complaint Prefix</h3>
+          <p style="color:var(--text-muted);margin:8px 0">Specify a prefix for complaint tokens.</p>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="prefix" class="input" placeholder="CMP-2026-">
+            <button class="btn btn-primary" id="btnPrefix">Update</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer"><span>SafeCity</span><span>CivicWorks</span><span>QuickFix</span><span>GovSolve</span></footer>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/auth-guard.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    renderLayout({ role: 'admin', page: 'settings' });
+
+    (async () => {
+      const r = await api.get('/admin/settings');
+      if (r.success && r.data) {
+        document.getElementById('autoAssign').checked = !!r.data.auto_assign;
+        document.getElementById('emailEnabled').checked = !!r.data.email_enabled;
+        document.getElementById('smsEnabled').checked = !!r.data.sms_enabled;
+        document.getElementById('prefix').value = r.data.complaint_prefix || 'CMP-2026-';
+      }
+    })();
+
+    document.getElementById('btnPrefix').onclick = async () => {
+      const r = await api.put('/admin/settings', { complaint_prefix: document.getElementById('prefix').value });
+      if (r.success) alert('Prefix updated'); else alert(r.message);
+    };
+
+    const updateCheck = async (field, val) => {
+      const data = {}; data[field] = val;
+      const r = await api.put('/admin/settings', data);
+      if (!r.success) alert(r.message);
+    };
+
+    document.getElementById('autoAssign').onchange = e => updateCheck('auto_assign', e.target.checked);
+    document.getElementById('emailEnabled').onchange = e => updateCheck('email_enabled', e.target.checked);
+    document.getElementById('smsEnabled').onchange = e => updateCheck('sms_enabled', e.target.checked);
+  </script>
+</body>
+
+</html>

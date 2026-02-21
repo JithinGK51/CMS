@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complaint Detail - Admin</title>
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+
+<body class="dash-page">
+  <header class="dash-header">
+    <div class="logo-area">
+      <div class="logo-icon">🛡</div><span class="logo-text">Admin Dashboard</span>
+    </div>
+    <div class="header-links">
+      <a href="categories.html">Manage Categories</a>
+      <a href="departments.html">Departments</a>
+      <a href="settings.html">Settings</a>
+      <span class="user-name">-</span>
+    </div>
+  </header>
+
+  <div class="dash-body">
+    <aside class="sidebar">
+      <div class="sidebar-user">
+        <div class="user-pill">
+          <div class="user-avatar" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3)">
+          </div>
+          <div class="user-info">
+            <div class="user-name">-</div>
+            <div class="user-role">Admin</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
+        <a href="manage-complaints.html" class="nav-link active">📋 All Complaints</a>
+        <a href="unassigned-complaints.html" class="nav-link">📌 Unassigned</a>
+        <a href="staff.html" class="nav-link">👥 Staff</a>
+        <a href="reports.html" class="nav-link">📊 Reports</a>
+        <a href="settings.html" class="nav-link">⚙ Settings</a>
+        <a href="#" class="nav-link logout">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="breadcrumb">Admin Dashboard › All Complaints › Complaint Details</div>
+      <h1 class="page-title">Complaint Detail</h1>
+
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:24px">
+        <div>
+          <div class="content-card">
+            <div style="margin-bottom:16px"><strong id="complaintToken">-</strong> <span class="badge badge-pending"
+                id="statusBadge">-</span> <span class="badge" id="priorityBadge">-</span></div>
+            <h3>Complaint Details</h3>
+            <p><strong id="complaintTitle">-</strong></p>
+            <p id="complaintDesc" style="margin:12px 0"></p>
+            <p>Location: <span id="complaintLoc">-</span></p>
+            <p>Submitted on: <span id="complaintDate">-</span></p>
+            <div id="imageArea" style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
+          </div>
+          <div class="content-card">
+            <h3>Internal Notes</h3>
+            <div id="notesList"></div>
+            <div style="display:flex;gap:8px;margin-top:16px">
+              <input type="text" id="noteInput" class="input" placeholder="Write an internal note..." style="flex:1">
+              <button class="btn btn-primary" id="btnNote">Send</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="content-card">
+            <h3>Assign Complaint</h3>
+            <select id="staffSelect" class="input" style="margin-bottom:12px">
+              <option>Select Staff</option>
+            </select>
+            <button class="btn btn-primary" id="btnAssign" style="width:100%">Assign</button>
+          </div>
+          <div class="content-card">
+            <h3>Change Status</h3>
+            <select id="statusSelect" class="input">
+              <option value="submitted">Submitted</option>
+              <option value="assigned">Assigned</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+            <button class="btn btn-primary" id="btnStatus" style="width:100%;margin-top:12px">Update</button>
+          </div>
+          <div class="content-card">
+            <h3>Citizen Info</h3>
+            <p id="reportedBy">Reported By: -</p>
+            <p id="reporterPhone"></p>
+            <p id="reporterEmail"></p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer"><span>SafeCity</span><span>CivicWorks</span><span>QuickFix</span><span>GovSolve</span></footer>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/auth-guard.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    renderLayout({ role: 'admin', page: 'manage-complaints' });
+    const id = new URLSearchParams(location.search).get('id');
+    if (!id) { location.href = 'manage-complaints.html'; }
+
+    let complaint = {};
+    const load = async () => {
+      const r = await api.get('/admin/complaints/' + id);
+      if (!r.success) { alert('Not found'); location.href = 'manage-complaints.html'; return; }
+      complaint = r.data;
+
+      document.getElementById('complaintToken').textContent = complaint.token || complaint.id;
+      document.getElementById('statusBadge').textContent = complaint.status || '-';
+      document.getElementById('statusBadge').className = 'badge badge-' + (complaint.status || 'pending').replace('_', '-');
+      document.getElementById('complaintTitle').textContent = complaint.title || '-';
+      document.getElementById('complaintDesc').textContent = complaint.description || '-';
+      document.getElementById('complaintLoc').textContent = complaint.location || '-';
+      document.getElementById('complaintDate').textContent = complaint.created_at ? new Date(complaint.created_at).toLocaleString() : '-';
+
+      document.getElementById('reportedBy').textContent = 'Reported By: Citizen';
+      document.getElementById('reporterPhone').textContent = complaint.citizen_mobile ? ('Phone: ' + complaint.citizen_mobile) : '';
+      document.getElementById('reporterEmail').textContent = complaint.citizen_email ? ('Email: ' + complaint.citizen_email) : '';
+      document.getElementById('statusSelect').value = complaint.status || 'submitted';
+
+      // Media
+      let mediaHtml = '';
+      if (complaint.image_url) {
+        mediaHtml += `<div><label>Citizen Image</label><a href="${complaint.image_url}" target="_blank"><img src="${complaint.image_url}" style="width:100%;border-radius:4px;margin-top:4px"></a></div>`;
+      }
+      if (complaint.complaint_files && complaint.complaint_files.length) {
+        mediaHtml += `<div><label>Resolution Proofs</label>${complaint.complaint_files.map(f => `<a href="${f.file_url}" target="_blank" style="display:block;margin-top:4px;color:var(--primary-light)">View Proof File ›</a>`).join('')}</div>`;
+      }
+      document.getElementById('imageArea').innerHTML = mediaHtml;
+
+      const tl = complaint.timeline || [];
+      document.getElementById('notesList').innerHTML = tl.filter(t => t.note).map(t => `
+        <div style="padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:8px">
+          <small>${t.created_at ? new Date(t.created_at).toLocaleString() : ''}</small>
+          <p>${t.note}</p>
+        </div>
+      `).join('') || '<p style="color:var(--text-muted)">No notes yet.</p>';
+
+      const staffRes = await api.get('/admin/staff');
+      const staff = staffRes.success && staffRes.data ? staffRes.data : [];
+      const sel = document.getElementById('staffSelect');
+      sel.innerHTML = '<option value="">Select Staff</option>' + staff.filter(s => s.role !== 'admin').map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    };
+
+    document.getElementById('btnAssign').onclick = async () => {
+      const sid = document.getElementById('staffSelect').value;
+      if (!sid) { alert('Select staff'); return; }
+      const r = await api.put('/admin/assign/' + id, { assigned_staff_id: sid });
+      if (r.success) { alert('Assigned'); load(); } else alert(r.message);
+    };
+    document.getElementById('btnStatus').onclick = async () => {
+      const st = document.getElementById('statusSelect').value;
+      const r = await api.put('/admin/status/' + id, { status: st });
+      if (r.success) { alert('Updated'); load(); } else alert(r.message);
+    };
+    document.getElementById('btnNote').onclick = async () => {
+      const note = document.getElementById('noteInput').value.trim();
+      if (!note) return;
+      const r = await api.post('/admin/complaints/' + id + '/note', { note });
+      if (r.success) { document.getElementById('noteInput').value = ''; load(); } else alert(r.message);
+    };
+
+    load();
+  </script>
+</body>
+
+</html>

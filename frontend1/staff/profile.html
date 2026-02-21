@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Profile - CMS</title>
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body class="dash-page">
+  <header class="dash-header">
+    <div class="logo-area"><div class="logo-icon">👷</div><span class="logo-text">Staff Dashboard</span></div>
+    <div class="header-links"><span class="user-name">-</span></div>
+  </header>
+
+  <div class="dash-body">
+    <aside class="sidebar">
+      <div class="sidebar-user"><div class="user-pill"><div class="user-avatar" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3)"></div><div class="user-info"><div class="user-name">-</div><div class="user-role">Staff</div></div></div></div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
+        <a href="my-complaints.html" class="nav-link">📋 My Complaints</a>
+        <a href="profile.html" class="nav-link active">👤 Profile</a>
+        <a href="settings.html" class="nav-link">⚙ Settings</a>
+        <a href="#" class="nav-link logout">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="breadcrumb">Staff Dashboard › Staff Profile</div>
+      <h1 class="page-title">Staff Profile</h1>
+
+      <div class="content-card" style="max-width:600px">
+        <div style="display:grid;grid-template-columns:180px 1fr;gap:32px">
+          <div style="text-align:center">
+            <div class="user-avatar" style="width:100px;height:100px;border-radius:50%;background:rgba(30,58,138,0.2);margin:0 auto 12px"></div>
+            <div class="user-name" id="profileName">-</div>
+            <div class="user-role" id="profileRole">-</div>
+          </div>
+          <div>
+            <h3>Personal Info</h3>
+            <form id="profileForm">
+              <div class="form-group"><label>Name</label><input type="text" name="name" class="input" id="inputName"></div>
+              <div class="form-group"><label>Email</label><input type="email" class="input" id="inputEmail" readonly style="background:#f1f5f9"></div>
+              <div class="form-group"><label>Phone</label><input type="tel" name="phone" class="input" id="inputPhone" placeholder="+91 "></div>
+              <div class="form-group"><label>Department</label><input type="text" class="input" id="inputDept" readonly style="background:#f1f5f9"></div>
+              <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer"><span>SafeCity</span><span>CivicWorks</span><span>QuickFix</span><span>GovSolve</span></footer>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/auth-guard.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    renderLayout({ role: 'staff', page: 'profile' });
+
+    const load = async () => {
+      const r = await api.get('/staff/profile');
+      if (r.success && r.data) {
+        const d = r.data;
+        document.getElementById('profileName').textContent = d.name || '-';
+        document.getElementById('profileRole').textContent = d.department_name || d.role || '-';
+        document.getElementById('inputName').value = d.name || '';
+        document.getElementById('inputEmail').value = d.email || '';
+        document.getElementById('inputPhone').value = d.phone || '';
+        document.getElementById('inputDept').value = d.department_name || '-';
+      }
+    };
+
+    document.getElementById('profileForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const r = await api.put('/staff/profile', {
+        name: document.getElementById('inputName').value,
+        phone: document.getElementById('inputPhone').value
+      });
+      if (r.success) { alert('Saved'); load(); } else alert(r.message);
+    };
+
+    load();
+  </script>
+</body>
+</html>

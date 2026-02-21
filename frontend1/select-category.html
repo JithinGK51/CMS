@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Select Complaint Type - CMS</title>
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/public.css">
+</head>
+
+<body class="public-page">
+  <header class="public-header">
+    <div class="logo-area">
+      <div class="logo-icon">🏛</div>
+      <span class="logo-text">Public Complaint Management System</span>
+    </div>
+    <div class="header-actions">
+      <a href="login.html" class="btn btn-primary">Login</a>
+    </div>
+  </header>
+
+  <main class="hero">
+    <div class="breadcrumb"><a href="index.html">Home</a> › Select Complaint Type</div>
+    <h1 class="section-title">Select Complaint Type</h1>
+
+    <div class="category-grid" id="categoryGrid">
+      <!-- Loaded from API -->
+    </div>
+
+    <div class="how-it-works">
+      <div class="step-card">1 Select Complaint Type<br><small>• Choose the category of your issue.</small></div>
+      <div class="step-card">3 Get Updates<br><small>• Track status & receive updates.</small></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span> SafeCity </span><span> CivicWorks </span><span> QuickFix </span><span> GovSolve </span>
+  </footer>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    (async () => {
+      const icons = { 'Water Supply': '💧', 'Electricity': '⚡', 'Civic': '🗑', 'Transport': '🛣', 'Traffic': '🚦', 'Health': '🏥', 'Education': '🏫', 'Public Safety': '🛡', 'Garbage Problem': '🗑' };
+      const res = await api.get('/categories');
+      const cats = res.success && res.data ? res.data : [
+        { id: 'civic', name: 'Civic' }, { id: 'water', name: 'Water Supply' }, { id: 'electricity', name: 'Electricity' },
+        { id: 'transport', name: 'Transport' }, { id: 'traffic', name: 'Traffic' }, { id: 'health', name: 'Health & Sanitation' },
+        { id: 'education', name: 'Education' }, { id: 'safety', name: 'Public Safety' }
+      ];
+      document.getElementById('categoryGrid').innerHTML = cats.map(c => `
+        <a href="submit-complaint.html?category_id=${c.id}" class="category-card">
+          <span class="category-icon">${icons[c.name] || '📋'}</span>${c.name} ›
+        </a>
+      `).join('');
+    })();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Management - Admin</title>
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body class="dash-page">
+  <header class="dash-header">
+    <div class="logo-area"><div class="logo-icon">🛡</div><span class="logo-text">Admin Dashboard</span></div>
+    <div class="header-links">
+      <a href="categories.html">Manage Categories</a>
+      <a href="departments.html">Departments</a>
+      <a href="settings.html">Settings</a>
+      <span class="user-name">-</span>
+    </div>
+  </header>
+
+  <div class="dash-body">
+    <aside class="sidebar">
+      <div class="sidebar-user"><div class="user-pill"><div class="user-avatar" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3)"></div><div class="user-info"><div class="user-name">-</div><div class="user-role">Admin</div></div></div></div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
+        <a href="manage-complaints.html" class="nav-link">📋 All Complaints</a>
+        <a href="unassigned-complaints.html" class="nav-link">📌 Unassigned</a>
+        <a href="staff.html" class="nav-link active">👥 Staff Management</a>
+        <a href="reports.html" class="nav-link">📊 Reports</a>
+        <a href="settings.html" class="nav-link">⚙ Settings</a>
+        <a href="#" class="nav-link logout">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="breadcrumb">Admin Dashboard › Staff Management</div>
+      <h1 class="page-title">Staff Management</h1>
+      <a href="add-staff.html" class="btn btn-primary" style="margin-bottom:20px">+ Add Staff</a>
+
+      <div class="content-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer"><span>SafeCity</span><span>CivicWorks</span><span>QuickFix</span><span>GovSolve</span></footer>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/auth-guard.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    renderLayout({ role: 'admin', page: 'staff' });
+
+    const load = async () => {
+      const r = await api.get('/admin/staff');
+      const list = r.success && r.data ? r.data : [];
+      document.getElementById('tableBody').innerHTML = list.map(s => `
+        <tr><td>${s.name}</td><td>${s.email}</td><td>${(s.departments && s.departments.name) || '-'}</td><td>${s.role || '-'}</td>
+        <td><span class="badge ${s.is_active ? 'badge-resolved' : 'badge-pending'}">${s.is_active ? 'Active' : 'Inactive'}</span></td>
+        <td><button class="btn btn-primary" onclick="location.href='add-staff.html?edit=${s.id}'">Edit</button></td></tr>
+      `).join('') || '<tr><td colspan="6">No staff</td></tr>';
+    };
+    load();
+  </script>
+</body>
+</html>

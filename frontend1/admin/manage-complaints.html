@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Complaints - Admin</title>
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body class="dash-page">
+  <header class="dash-header">
+    <div class="logo-area"><div class="logo-icon">🛡</div><span class="logo-text">Admin Dashboard</span></div>
+    <div class="header-links">
+      <a href="categories.html">Manage Categories</a>
+      <a href="departments.html">Departments</a>
+      <a href="settings.html">Settings</a>
+      <a href="#" class="notif-badge">🔔<sup>0</sup></a>
+      <span class="user-name">-</span>
+    </div>
+  </header>
+
+  <div class="dash-body">
+    <aside class="sidebar">
+      <div class="sidebar-user"><div class="user-pill"><div class="user-avatar" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3)"></div><div class="user-info"><div class="user-name">-</div><div class="user-role">Admin</div></div></div></div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
+        <a href="manage-complaints.html" class="nav-link active">📋 All Complaints</a>
+        <a href="unassigned-complaints.html" class="nav-link">📌 Unassigned Complaints</a>
+        <a href="staff.html" class="nav-link">👥 Staff Management</a>
+        <a href="reports.html" class="nav-link">📊 Reports</a>
+        <a href="settings.html" class="nav-link">⚙ Settings</a>
+        <a href="#" class="nav-link logout">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="breadcrumb">Admin Dashboard › All Complaints</div>
+      <h1 class="page-title">All Complaints</h1>
+
+      <div class="content-card">
+        <div class="filters-row">
+          <select id="filterStatus"><option value="">All Status</option><option value="submitted">Submitted</option><option value="assigned">Assigned</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option></select>
+          <select id="filterCategory"><option value="">All Categories</option></select>
+          <select id="filterDept"><option value="">All Departments</option></select>
+          <input type="text" id="filterSearch" placeholder="Search token..." style="max-width:200px">
+          <button class="btn btn-primary" id="btnSearch">🔍 Search</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Token</th><th>Category</th><th>Location</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer"><span>SafeCity</span><span>CivicWorks</span><span>QuickFix</span><span>GovSolve</span></footer>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/auth-guard.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    renderLayout({ role: 'admin', page: 'manage-complaints' });
+
+    const statusClass = s => ({ submitted:'pending', assigned:'assigned', in_progress:'in-progress', resolved:'resolved', closed:'closed' }[s] || 'pending');
+    const load = async () => {
+      const params = new URLSearchParams();
+      const st = document.getElementById('filterStatus').value;
+      const cat = document.getElementById('filterCategory').value;
+      const dept = document.getElementById('filterDept').value;
+      const search = document.getElementById('filterSearch').value;
+      if (st) params.set('status', st);
+      if (cat) params.set('category', cat);
+      if (dept) params.set('dept', dept);
+      if (search) params.set('search', search);
+
+      const r = await api.get('/admin/complaints?' + params);
+      const list = r.success && r.data ? r.data : [];
+      const catName = c => (c.categories && c.categories.name) || '-';
+      document.getElementById('tableBody').innerHTML = list.map(c => `
+        <tr><td><a href="complaint-detail.html?id=${c.id}" class="row-link">${c.token || c.id}</a></td>
+        <td>${catName(c)}</td><td>${c.location || '-'}</td>
+        <td><span class="badge badge-${statusClass(c.status)}">${c.status || '-'}</span></td>
+        <td>${c.created_at ? new Date(c.created_at).toLocaleString() : '-'}</td></tr>
+      `).join('') || '<tr><td colspan="5">No complaints</td></tr>';
+    };
+
+    document.getElementById('btnSearch').onclick = load;
+    api.get('/categories').then(r => { if (r.success && r.data) { const s = document.getElementById('filterCategory'); r.data.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; s.appendChild(o); }); } });
+    api.get('/departments').then(r => { if (r.success && r.data) { const s = document.getElementById('filterDept'); r.data.forEach(d => { const o = document.createElement('option'); o.value = d.id; o.textContent = d.name; s.appendChild(o); }); } });
+    load();
+  </script>
+</body>
+</html>

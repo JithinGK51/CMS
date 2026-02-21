@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Category Management - Admin</title>
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body class="dash-page">
+  <header class="dash-header">
+    <div class="logo-area"><div class="logo-icon">🛡</div><span class="logo-text">Admin Dashboard</span></div>
+    <div class="header-links">
+      <a href="categories.html">Manage Categories</a>
+      <a href="departments.html">Departments</a>
+      <a href="settings.html">Settings</a>
+      <span class="user-name">-</span>
+    </div>
+  </header>
+
+  <div class="dash-body">
+    <aside class="sidebar">
+      <div class="sidebar-user"><div class="user-pill"><div class="user-avatar" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3)"></div><div class="user-info"><div class="user-name">-</div><div class="user-role">Admin</div></div></div></div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
+        <a href="manage-complaints.html" class="nav-link">📋 All Complaints</a>
+        <a href="unassigned-complaints.html" class="nav-link">📌 Unassigned</a>
+        <a href="staff.html" class="nav-link">👥 Staff</a>
+        <a href="reports.html" class="nav-link">📊 Reports</a>
+        <a href="settings.html" class="nav-link">⚙ Settings</a>
+        <a href="#" class="nav-link logout">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="breadcrumb">Admin Dashboard › Category Management</div>
+      <h1 class="page-title">Category Management</h1>
+      <button class="btn btn-primary" id="btnCreate" style="margin-bottom:20px">Create Category</button>
+
+      <div class="content-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Complaint Type</th><th>Department</th><th>Edit</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="modal" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <div class="modal-header"><h3>Add / Edit Category</h3><button class="modal-close" id="modalClose">×</button></div>
+      <div class="form-group"><label>Name</label><input type="text" id="catName" class="input" placeholder="Category name"></div>
+      <div class="form-group"><label>Department</label><select id="catDept" class="input"></select></div>
+      <button class="btn btn-primary" id="btnSave">Save</button>
+    </div>
+  </div>
+
+  <footer class="footer"><span>SafeCity</span><span>CivicWorks</span><span>QuickFix</span><span>GovSolve</span></footer>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/auth-guard.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    renderLayout({ role: 'admin', page: 'categories' });
+    let editingId = null;
+
+    const load = async () => {
+      const r = await api.get('/categories');
+      const list = r.success && r.data ? r.data : [];
+      document.getElementById('tableBody').innerHTML = list.map(c => `
+        <tr><td>${c.name}</td><td>${(c.departments && c.departments.name) || '-'}</td><td><button class="btn btn-primary" onclick="editCat('${c.id}','${c.name}','${c.department_id || ''}')">Edit</button></td></tr>
+      `).join('') || '<tr><td colspan="3">No categories</td></tr>';
+    };
+
+    const openModal = () => { editingId = null; document.getElementById('catName').value = ''; document.getElementById('modal').style.display = 'flex'; };
+    const closeModal = () => { document.getElementById('modal').style.display = 'none'; };
+
+    window.editCat = (id, name, deptId) => {
+      editingId = id;
+      document.getElementById('catName').value = name;
+      document.getElementById('catDept').value = deptId;
+      document.getElementById('modal').style.display = 'flex';
+    };
+
+    document.getElementById('btnCreate').onclick = openModal;
+    document.getElementById('modalClose').onclick = closeModal;
+
+    api.get('/departments').then(r => {
+      if (r.success && r.data) {
+        const s = document.getElementById('catDept');
+        s.innerHTML = '<option value="">Select</option>' + r.data.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+      }
+    });
+
+    document.getElementById('btnSave').onclick = async () => {
+      const name = document.getElementById('catName').value.trim();
+      const deptId = document.getElementById('catDept').value;
+      if (!name) { alert('Enter name'); return; }
+      if (editingId) {
+        const r = await api.put('/admin/categories/' + editingId, { name, department_id: deptId || null });
+        if (r.success) { closeModal(); load(); } else alert(r.message);
+      } else {
+        const r = await api.post('/admin/categories', { name, department_id: deptId || null });
+        if (r.success) { closeModal(); load(); } else alert(r.message);
+      }
+    };
+
+    load();
+  </script>
+</body>
+</html>

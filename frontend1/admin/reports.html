@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports - Admin</title>
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body class="dash-page">
+  <header class="dash-header">
+    <div class="logo-area"><div class="logo-icon">🛡</div><span class="logo-text">Admin Dashboard</span></div>
+    <div class="header-links">
+      <a href="categories.html">Manage Categories</a>
+      <a href="departments.html">Departments</a>
+      <a href="settings.html">Settings</a>
+      <span class="user-name">-</span>
+    </div>
+  </header>
+
+  <div class="dash-body">
+    <aside class="sidebar">
+      <div class="sidebar-user"><div class="user-pill"><div class="user-avatar" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3)"></div><div class="user-info"><div class="user-name">-</div><div class="user-role">Admin</div></div></div></div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
+        <a href="manage-complaints.html" class="nav-link">📋 All Complaints</a>
+        <a href="unassigned-complaints.html" class="nav-link">📌 Unassigned</a>
+        <a href="staff.html" class="nav-link">👥 Staff</a>
+        <a href="reports.html" class="nav-link active">📊 Reports</a>
+        <a href="settings.html" class="nav-link">⚙ Settings</a>
+        <a href="#" class="nav-link logout">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="breadcrumb">Admin Dashboard › Reports</div>
+      <h1 class="page-title">Reports & Analytics</h1>
+
+      <div class="stats-grid">
+        <div class="stat-card blue"><div><div class="num" id="total">0</div><div class="label">Total</div></div></div>
+        <div class="stat-card green"><div><div class="num" id="resolved">0</div><div class="label">Resolved</div></div></div>
+        <div class="stat-card orange"><div><div class="num" id="pending">0</div><div class="label">Pending</div></div></div>
+        <div class="stat-card purple"><div><div class="num" id="rate">0%</div><div class="label">Resolution Rate</div></div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div class="content-card">
+          <h3>Complaint Trends</h3>
+          <div class="chart-placeholder" id="trendsChart">Loading...</div>
+        </div>
+        <div class="content-card">
+          <h3>Status Distribution</h3>
+          <div class="chart-placeholder" id="statusChart">Loading...</div>
+        </div>
+        <div class="content-card">
+          <h3>Category Distribution</h3>
+          <div class="chart-placeholder" id="catChart">Loading...</div>
+        </div>
+        <div class="content-card">
+          <h3>Staff Performance</h3>
+          <div class="chart-placeholder" id="perfChart">Loading...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer"><span>SafeCity</span><span>CivicWorks</span><span>QuickFix</span><span>GovSolve</span></footer>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/auth-guard.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    renderLayout({ role: 'admin', page: 'reports' });
+
+    (async () => {
+      try {
+        const [s, tr, st, cat, perf] = await Promise.all([
+          api.get('/admin/reports/summary'),
+          api.get('/admin/reports/trends'),
+          api.get('/admin/reports/status'),
+          api.get('/admin/reports/categories'),
+          api.get('/admin/reports/performance')
+        ]);
+        if (s.success && s.data) {
+          document.getElementById('total').textContent = s.data.total || 0;
+          document.getElementById('resolved').textContent = s.data.resolved || 0;
+          document.getElementById('pending').textContent = s.data.pending || 0;
+          document.getElementById('rate').textContent = (s.data.resolution_rate || 0) + '%';
+        }
+        if (tr.success && tr.data) document.getElementById('trendsChart').innerHTML = tr.data.map(x => `${x.date}: ${x.count}`).join('<br>') || 'No data';
+        if (st.success && st.data) document.getElementById('statusChart').innerHTML = st.data.map(x => `${x.status}: ${x.count}`).join('<br>') || 'No data';
+        if (cat.success && cat.data) document.getElementById('catChart').innerHTML = cat.data.map(x => `${x.category}: ${x.count}`).join('<br>') || 'No data';
+        if (perf.success && perf.data) document.getElementById('perfChart').innerHTML = perf.data.map(x => `${x.staff}: ${x.assigned} assigned, ${x.resolved_count} resolved`).join('<br>') || 'No data';
+      } catch (e) { console.warn(e); }
+    })();
+  </script>
+</body>
+</html>

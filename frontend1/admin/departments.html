@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Department Management - Admin</title>
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+
+<body class="dash-page">
+  <header class="dash-header">
+    <div class="logo-area">
+      <div class="logo-icon">🛡</div><span class="logo-text">Admin Dashboard</span>
+    </div>
+    <div class="header-links">
+      <a href="categories.html">Manage Categories</a>
+      <a href="departments.html">Departments</a>
+      <a href="settings.html">Settings</a>
+      <span class="user-name">-</span>
+    </div>
+  </header>
+
+  <div class="dash-body">
+    <aside class="sidebar">
+      <div class="sidebar-user">
+        <div class="user-pill">
+          <div class="user-avatar" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3)">
+          </div>
+          <div class="user-info">
+            <div class="user-name">-</div>
+            <div class="user-role">Admin</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
+        <a href="manage-complaints.html" class="nav-link">📋 All Complaints</a>
+        <a href="unassigned-complaints.html" class="nav-link">📌 Unassigned</a>
+        <a href="staff.html" class="nav-link">👥 Staff</a>
+        <a href="reports.html" class="nav-link">📊 Reports</a>
+        <a href="settings.html" class="nav-link">⚙ Settings</a>
+        <a href="#" class="nav-link logout">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="breadcrumb">Admin Dashboard › Department Management</div>
+      <h1 class="page-title">Department Management</h1>
+      <button class="btn btn-primary" id="btnCreate" style="margin-bottom:20px">Add Department</button>
+
+      <div class="content-card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Department</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="modal" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add Department</h3><button class="modal-close" id="modalClose">×</button>
+      </div>
+      <div class="form-group"><label>Department Name</label><input type="text" id="deptName" class="input"
+          placeholder="Enter department name..."></div>
+      <button class="btn btn-primary" id="btnSave">Save</button> <button class="btn btn-outline"
+        id="btnCancel">Cancel</button>
+    </div>
+  </div>
+
+  <footer class="footer"><span>SafeCity</span><span>CivicWorks</span><span>QuickFix</span><span>GovSolve</span></footer>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/auth-guard.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    renderLayout({ role: 'admin', page: 'departments' });
+
+    let editingId = null;
+    const load = async () => {
+      const r = await api.get('/departments');
+      const list = r.success && r.data ? r.data : [];
+      document.getElementById('tableBody').innerHTML = list.map(d => `
+        <tr><td>${d.name}</td><td>${d.created_at ? new Date(d.created_at).toLocaleString() : '-'}</td>
+        <td><button class="btn btn-primary" onclick="editDept('${d.id}','${d.name}')">Edit</button></td></tr>
+      `).join('') || '<tr><td colspan="3">No departments</td></tr>';
+    };
+
+    window.editDept = (id, name) => {
+      editingId = id;
+      document.getElementById('deptName').value = name;
+      document.getElementById('modal').style.display = 'flex';
+    };
+
+    document.getElementById('btnCreate').onclick = () => { editingId = null; document.getElementById('deptName').value = ''; document.getElementById('modal').style.display = 'flex'; };
+    document.getElementById('modalClose').onclick = document.getElementById('btnCancel').onclick = () => document.getElementById('modal').style.display = 'none';
+
+    document.getElementById('btnSave').onclick = async () => {
+      const name = document.getElementById('deptName').value.trim();
+      if (!name) return;
+
+      let r;
+      if (editingId) {
+        r = await api.put('/admin/departments/' + editingId, { name });
+      } else {
+        r = await api.post('/admin/departments', { name });
+      }
+
+      if (r.success) { document.getElementById('modal').style.display = 'none'; load(); } else alert(r.message);
+    };
+
+    load();
+  </script>
+</body>
+
+</html>
