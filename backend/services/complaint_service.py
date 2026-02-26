@@ -7,12 +7,14 @@ class ComplaintService:
     @staticmethod
     def create_complaint(data):
         supabase = get_supabase_client()
+        # Ensure settings_id is set to link back to global settings
+        data['settings_id'] = 1
         res = supabase.table('complaints').insert(data).execute()
         
         if not res.data:
             raise Exception("Failed to create complaint")
 
-        # Refetch to get the generated token (trigger sets it)
+        # Refetch to get the generated token (trigger sets it using system_settings.complaint_prefix)
         inserted_id = res.data[0]['id']
         complaint_res = supabase.table('complaints').select('*, categories(name)').eq('id', inserted_id).single().execute()
         complaint = complaint_res.data
@@ -20,15 +22,16 @@ class ComplaintService:
         # Initial timeline entry
         ComplaintService.add_timeline(complaint['id'], 'submitted', None, 'Complaint submitted by citizen')
         
-        # Auto-assign if enabled
+        # Use Auto-assign feature from system_settings
         try:
-            settings_res = supabase.table('system_settings').select('auto_assign').limit(1).execute()
-            if settings_res.data and settings_res.data[0].get('auto_assign'):
+            settings_res = supabase.table('system_settings').select('auto_assign').eq('id', 1).single().execute()
+            if settings_res.data and settings_res.data.get('auto_assign'):
+                print(f"[FEATURE: AUTO-ASSIGN] Auto-assigning complaint {complaint['id']}...")
                 ComplaintService.auto_assign(complaint)
         except Exception as e:
             print(f"Auto-assign check failed: {e}")
         
-        # Notify admins
+        # Status update notification
         try:
             NotificationService.notify_admins("New Complaint", f"New complaint received: {complaint.get('title','')}")
         except Exception as e:
